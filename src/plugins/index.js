@@ -114,5 +114,15 @@ export default [
 			'./OnScreenKeyboard/index.js'
 		)
 	}),
+	new DwcPlugin({
+		id: 'Meminisse',
+		name: 'Meminisse',
+		author: 'COBOD International A/S',
+		version,
+		loadDwcResources: () => import(
+			/* webpackChunkName: "Meminisse" */
+			'./Meminisse/index.js'
+		)
+	}),
 	// Add your own plugins here during development...
 ]
