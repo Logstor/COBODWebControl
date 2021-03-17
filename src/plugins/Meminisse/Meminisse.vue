@@ -91,7 +91,7 @@ h1 {
 						</tr>
 						<tr v-for="(log, index) in logList" :key="index">
 							<td>{{ log.date() }}</td>
-							<td><v-btn @click="onDownloadClick(log)">Download</v-btn></td>
+							<td><a :href="log.createBlob()" :download="log.date()+'.csv'">Download</a></td>
 						</tr>
 					</table>
 				</div>
@@ -141,10 +141,6 @@ export default {
 		onClick() {
 			this.active = !this.active;
 			console.log("The button was pressed and the debug mode is %s", this.debug);
-		},
-
-		onDownloadClick(log) {
-			window.open(log.createBlob());
 		},
 
 		visibleAxis() {

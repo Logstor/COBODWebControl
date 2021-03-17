@@ -61,7 +61,11 @@ export class Log
 
         for (let row in this._buffer)
         {
-            csvContent += row.join(",") + "/r/n";
+            for (let it in row)
+            {
+                csvContent += it + ",";
+            }
+            csvContent += "\r\n";
         }
         return encodeURI(csvContent);
     }
