@@ -1,6 +1,5 @@
-class Log 
+export class Log 
 {
-    
     constructor(date, headerList) 
     {
         // Initialize metadata
@@ -17,7 +16,7 @@ class Log
     _addHeader() 
     {
         // Check for errors
-        for (let string in headerList)
+        for (let string in this._headerList)
         {
             if (string.search('\n') != -1)
                 throw "Headers shouldn't contain newline characters!";
@@ -27,6 +26,13 @@ class Log
         this._buffer.push(this._headerList);
     }
 
+    /**
+     * Adds a new entry to the csv log.
+     * 
+     * Make sure there's an element to every header, otherwise it throws.
+     * 
+     * @param {} dataList 
+     */
     addEntry(dataList)
     {
         // Make sure length fits
@@ -44,7 +50,21 @@ class Log
         this._buffer.push(dataList);
     }
 
-    //TODO: Make function to get log in CSV format
+    /**
+     * Creates a blob in CSV format.
+     * 
+     * @returns URI
+     */
+    createBlob()
+    {
+        let csvContent = "data:text/csv;charset=utf-8,";
+
+        for (let row in this._buffer)
+        {
+            csvContent += row.join(",") + "/r/n";
+        }
+        return encodeURI(csvContent);
+    }
 
     get date() { return this._date; }
     get headers() { return this._headerList; }
