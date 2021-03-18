@@ -141,9 +141,8 @@ export default {
 		},
 
 		visibleAxis() {
-			/*return this.move.axes.filter(axis => axis.visible); */
 			console.log("visibleAxis()");
-			return [{letter: "X"}, {letter: "Y"}];
+			return this.move.axes.filter(axis => axis.visible);
 		},
 
 		addLog(log) {
@@ -154,7 +153,8 @@ export default {
 		async log() {
 			console.log("async log()");
 			// Wait for print to start
-			//while(!this.isJobRunning) await sleep(1000);
+			console.log("Waiting for job starting");
+			while(!this.isJobRunning) await sleep(1000);
 
 			// Make log header depending on axis.
 			let axis = this.visibleAxis();
@@ -165,7 +165,7 @@ export default {
 
 			// Continously add to log
 			console.log("Going into log loop");
-			while (this.active /*&& this.isJobRunning*/)
+			while (this.active && this.isJobRunning)
 			{
 				await sleep(this.logDelay);
 				currLog.addEntry([100, 100]);
