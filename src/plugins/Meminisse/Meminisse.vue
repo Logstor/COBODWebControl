@@ -102,7 +102,7 @@ h1 {
 'use strict'
 
 //import { mapState } from 'vuex';
-//import { isPrinting } from '../../store/machine/modelEnums.js';
+import { isPrinting } from '../../store/machine/modelEnums.js';
 import { Log } from './log';
 import { sleep } from './index.js';
 
@@ -120,7 +120,7 @@ export default {
 	
 	computed: {
 		//...mapState('machine/model', ['job', 'move', 'state']),
-		//isJobRunning: state => isPrinting(state.state.status),
+		isJobRunning: state => isPrinting(state.state.status),
 		loggingState() {
 			return this.active ? "On" : "Off";
 		},
