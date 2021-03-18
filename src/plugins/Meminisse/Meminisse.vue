@@ -107,7 +107,8 @@ h1 {
 
 import { mapState } from 'vuex';
 import { isPrinting } from '../../store/machine/modelEnums.js';
-import { Log } from './log'
+import { Log } from './log';
+import { sleep } from './index.js';
 
 export default {
 	data() {
@@ -115,9 +116,11 @@ export default {
 			elevation: "2",
 			active: true,
 
-			logList: [new Log(Date.now, ["Mock", "Mocky"]), 
+			logDelay: 2000,
+
+			logList: new Array(new Log(Date.now, ["Mock", "Mocky"]), 
 			new Log(Date.now, ["Mock", "Mocky"]), 
-			new Log(Date.now, ["Mock", "Mocky"])],
+			new Log(Date.now, ["Mock", "Mocky"])),
 		}
 	},
 	
@@ -147,25 +150,36 @@ export default {
 			return this.move.axes.filter(axis => axis.visible);
 		},
 
+		addLog(log) {
+			this.logList.push(log);
+		},
+
 		async log() {
+			// Wait for print to start
+			while(!this.isJobRunning) 
+			{
+				await sleep(1000);
+			}
+
 			// Make log header depending on axis.
 			let axis = this.visibleAxis();
-			let headers = new Array(axis.length);
-			for (let a in axis)
-				headers.push(a.letter);
+			let headers = new Array();
+			for (let i=0; i < axis.length; ++i)
+				headers.push(axis[i].letter);
 			let currLog = new Log(Date.now, headers);
 
-			//TODO: Continously add to log
+			// Continously add to log
 			while (this.active && this.isJobRunning)
 			{
-				console.log("We're logging now!");
-				await new Promise(r => setTimeout(r, 2000));
+				await sleep(this.logDelay);
 				currLog.addEntry([100, 100, 100]);
 			}
 
-			//TODO: Done with current print, then make log available for download
+			// Done with current print, then make log available for download
+			this.addLog(currLog);
 
-			//TODO: Prepare for logging again
+			// Prepare for logging again
+			this.log();
 		}
 	},
 

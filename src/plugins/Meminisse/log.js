@@ -16,9 +16,10 @@ export class Log
     _addHeader() 
     {
         // Check for errors
-        for (let string in this._headerList)
+        let size = this._headerList.length;
+        for (let i=0; i < size; ++i)
         {
-            if (string.search('\n') != -1)
+            if (this._headerList[i].search('\n') != -1)
                 throw "Headers shouldn't contain newline characters!";
         }
 
@@ -59,11 +60,14 @@ export class Log
     {
         let csvContent = "data:text/csv;charset=utf-8,";
 
-        for (let row in this._buffer)
+        let entryCount = this._headerList.length;
+        let rows = this._buffer.length;
+        for (let i=0; i < rows; ++i)
         {
-            for (let it in row)
+            let row = this._buffer[i];
+            for (let j=0; j < entryCount; ++j)
             {
-                csvContent += it + ",";
+                csvContent += row[j] + ",";
             }
             csvContent += "\r\n";
         }
