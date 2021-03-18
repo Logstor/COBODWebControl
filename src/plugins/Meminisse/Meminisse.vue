@@ -118,9 +118,7 @@ export default {
 
 			logDelay: 2000,
 
-			logList: new Array(new Log(Date.now, ["Mock", "Mocky"]), 
-			new Log(Date.now, ["Mock", "Mocky"]), 
-			new Log(Date.now, ["Mock", "Mocky"])),
+			logList: new Array(),
 		}
 	},
 	
@@ -156,10 +154,7 @@ export default {
 
 		async log() {
 			// Wait for print to start
-			while(!this.isJobRunning) 
-			{
-				await sleep(1000);
-			}
+			while(!this.isJobRunning) await sleep(1000);
 
 			// Make log header depending on axis.
 			let axis = this.visibleAxis();
