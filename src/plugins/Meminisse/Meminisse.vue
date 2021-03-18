@@ -41,7 +41,7 @@ h1 {
 	justify-content: center;
 	flex-direction: column;
 
-	box-shadow: 5px 5px 5px darkblue;
+	box-shadow: 5px 5px 8px darkblue;
 	border-radius: 10px;
 
 	background: cornsilk;
@@ -53,7 +53,7 @@ h1 {
 	margin: 10px;
 }
 
-#downloadtable, td {
+#downloadtable, td, th {
 	padding: 5px;
 }
 
@@ -72,10 +72,6 @@ h1 {
 			<div id="btndiv">
 				<v-btn @click="onClick" :elevation="this.elevation">{{this.active}}</v-btn>
 			</div>
-			<p>
-				{{ this.state }}
-			</p>
-			
 		</div>
 		
 		<div id="bottomdiv">
@@ -105,8 +101,8 @@ h1 {
 <script>
 'use strict'
 
-import { mapState } from 'vuex';
-import { isPrinting } from '../../store/machine/modelEnums.js';
+//import { mapState } from 'vuex';
+//import { isPrinting } from '../../store/machine/modelEnums.js';
 import { Log } from './log';
 import { sleep } from './index.js';
 
@@ -123,8 +119,8 @@ export default {
 	},
 	
 	computed: {
-		...mapState('machine/model', ['job', 'move', 'state']),
-		isJobRunning: state => isPrinting(state.state.status),
+		//...mapState('machine/model', ['job', 'move', 'state']),
+		//isJobRunning: state => isPrinting(state.state.status),
 		loggingState() {
 			return this.active ? "On" : "Off";
 		},
@@ -145,7 +141,8 @@ export default {
 		},
 
 		visibleAxis() {
-			return this.move.axes.filter(axis => axis.visible);
+			/*return this.move.axes.filter(axis => axis.visible); */
+			return [{letter: "X"}, {letter: "Y"}];
 		},
 
 		addLog(log) {
@@ -154,7 +151,7 @@ export default {
 
 		async log() {
 			// Wait for print to start
-			while(!this.isJobRunning) await sleep(1000);
+			//while(!this.isJobRunning) await sleep(1000);
 
 			// Make log header depending on axis.
 			let axis = this.visibleAxis();
@@ -164,17 +161,18 @@ export default {
 			let currLog = new Log(Date.now, headers);
 
 			// Continously add to log
-			while (this.active && this.isJobRunning)
+			while (this.active /*&& this.isJobRunning*/)
 			{
 				await sleep(this.logDelay);
-				currLog.addEntry([100, 100, 100]);
+				currLog.addEntry([100, 100]);
 			}
 
 			// Done with current print, then make log available for download
 			this.addLog(currLog);
 
 			// Prepare for logging again
-			this.log();
+			if (this.active)
+				this.log();
 		}
 	},
 
