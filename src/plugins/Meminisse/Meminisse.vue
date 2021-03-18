@@ -167,8 +167,17 @@ export default {
 			console.log("Going into log loop");
 			while (this.active && this.isJobRunning)
 			{
+				// Delay
 				await sleep(this.logDelay);
-				currLog.addEntry([100, 100]);
+				
+				// Record every position and add to log
+				let positions = new Array();
+				for (let i=0; i < axis.length; ++i)
+				{
+					let pos = axis[i].machinePosition;
+					positions.push( (pos != null) ? pos : -1 );
+				}
+				currLog.addEntry(positions);
 			}
 			console.log("Out of log loop");
 
