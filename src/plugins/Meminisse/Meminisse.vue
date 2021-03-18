@@ -142,14 +142,17 @@ export default {
 
 		visibleAxis() {
 			/*return this.move.axes.filter(axis => axis.visible); */
+			console.log("visibleAxis()");
 			return [{letter: "X"}, {letter: "Y"}];
 		},
 
 		addLog(log) {
+			console.log("addLog()");
 			this.logList.push(log);
 		},
 
 		async log() {
+			console.log("async log()");
 			// Wait for print to start
 			//while(!this.isJobRunning) await sleep(1000);
 
@@ -161,11 +164,13 @@ export default {
 			let currLog = new Log(Date.now, headers);
 
 			// Continously add to log
+			console.log("Going into log loop");
 			while (this.active /*&& this.isJobRunning*/)
 			{
 				await sleep(this.logDelay);
 				currLog.addEntry([100, 100]);
 			}
+			console.log("Out of log loop");
 
 			// Done with current print, then make log available for download
 			this.addLog(currLog);
