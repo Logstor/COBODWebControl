@@ -1,8 +1,16 @@
 export class Log 
 {
-    constructor(date, headerList) 
+    /**
+     * Constructs a Log instance.
+     * 
+     * @param {String} filename Name of the GCode file which is being printed.
+     * @param {Date} date The start date of this print log - just use Date.now()
+     * @param {Array<String>} headerList An array of Strings for the header of the CSV file.
+     */
+    constructor(filename, date, headerList) 
     {
         // Initialize metadata
+        this._filename = filename;
         this._date = date;
         this._headerList = headerList;
         this._buffer = new Array();
@@ -74,6 +82,7 @@ export class Log
         return encodeURI(csvContent);
     }
 
+    get filename() { return this._filename; }
     get date() { return this._date; }
     get headers() { return this._headerList; }
     get dataPointCount() { return this._headerList.length; }

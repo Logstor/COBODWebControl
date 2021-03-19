@@ -82,10 +82,12 @@ h1 {
 				<div id="downloadlist">
 					<table id="downloadtable">
 						<tr>
+							<th>GCode</th>
 							<th>Date</th>
 							<th>Link</th>
 						</tr>
 						<tr v-for="(log, index) in logList" :key="index">
+							<td>{{ log.filename() }}</td>
 							<td>{{ log.date() }}</td>
 							<td><a :href="log.createBlob()" :download="log.date()+'.csv'">Download</a></td>
 						</tr>
@@ -102,7 +104,7 @@ h1 {
 'use strict'
 
 import { mapState } from 'vuex';
-import { isPrinting } from '../../store/machine/modelEnums.js';
+import { isPrinting, isPaused } from '../../store/machine/modelEnums.js';
 import { Log } from './log';
 import { sleep } from './index.js';
 
@@ -117,10 +119,19 @@ export default {
 			logList: new Array(),
 		}
 	},
+
+	/**
+	 * Private properties
+	 */
+	created: {
+		localStorageLogName: "currentLog"
+	},
 	
 	computed: {
 		...mapState('machine/model', ['job', 'move', 'state']),
 		isJobRunning: state => isPrinting(state.state.status),
+		isJobPaused: state => isPaused(state.state.status),
+		currentFile: job => job.file.fileName,
 		loggingState() {
 			return this.active ? "On" : "Off";
 		},
@@ -137,31 +148,88 @@ export default {
 	methods: {
 		onClick() {
 			this.active = !this.active;
+			console.log(this.currentFile);
 			console.log("The button was pressed and the debug mode is %s", this.debug);
 		},
 
-		visibleAxis() {
-			console.log("visibleAxis()");
-			return this.move.axes.filter(axis => axis.visible);
-		},
+		/**
+		 * Returns an array of visible axis as classes.
+		 */
+		visibleAxis() { return this.move.axes.filter(axis => axis.visible); },
 
+		/**
+		 * Adds a downloadable log to the list over downloadable logs.
+		 * 
+		 * @param {Log} log The class instance of Log to add.
+		 */
 		addLog(log) {
 			console.log("addLog()");
 			this.logList.push(log);
 		},
 
+		/**
+		 * Saves an instance of the log to localstorage for later use.
+		 * 
+		 * @param {Log} log The class instance of Log to save.
+		 */
+		addLogLocalStorage(log) {
+			localStorage.setItem(this.localStorageLogName, JSON.stringify(log));
+		},
+
+		clearLogLocalStorage() {
+			localStorage.removeItem(this.localStorageLogName);
+		},
+
+		retrieveLogFromLocalStorage() {
+			// Try to retrieve the old log
+			let log = JSON.parse(localStorage.getItem(this.localStorageLogName));
+
+			// Check there was any
+			if (log == null)
+			{
+				if (this.debug)
+					console.log("There wasn't any old log in the localstorage");
+				return null;
+			}
+
+			// Make sure it's parsed correctly
+			if (typeof log != 'object')
+				throw "Retrieved log isn't of type Class Log!";
+
+			return log;
+		},
+
 		async log() {
 			console.log("async log()");
+
 			// Wait for print to start
 			console.log("Waiting for job starting");
 			while(!this.isJobRunning) await sleep(1000);
 
-			// Make log header depending on axis.
-			let axis = this.visibleAxis();
-			let headers = new Array();
-			for (let i=0; i < axis.length; ++i)
-				headers.push(axis[i].letter);
-			let currLog = new Log(Date.now, headers);
+			let axis; let headers; let currLog;
+			let oldLog = this.retrieveLogFromLocalStorage();
+			if (oldLog == null) 
+			{
+				console.log("Didn't find old log");
+
+				// Make log header depending on axis.
+				axis = this.visibleAxis();
+				headers = new Array();
+				for (let i=0; i < axis.length; ++i)
+					headers.push(axis[i].letter);
+				currLog = new Log(this.currentFile, Date.now, headers);
+			}
+			else
+			{
+				console.log("Found old log");
+				axis.visibleAxis();
+				currLog = oldLog;
+			}
+
+			// Make sure we don't lose the current log on refresh
+			window.onbeforeunload = function() {
+				this.addLogLocalStorage(currLog);
+			};
 
 			// Continously add to log
 			console.log("Going into log loop");
@@ -169,6 +237,10 @@ export default {
 			{
 				// Delay
 				await sleep(this.logDelay);
+
+				// Make sure the print isn't paused
+				if (this.isJobPaused)
+					continue;
 				
 				// Record every position and add to log
 				let positions = new Array();
@@ -183,6 +255,8 @@ export default {
 
 			// Done with current print, then make log available for download
 			this.addLog(currLog);
+			this.clearLogLocalStorage();
+			window.onbeforeunload = null;
 
 			// Prepare for logging again
 			if (this.active)
