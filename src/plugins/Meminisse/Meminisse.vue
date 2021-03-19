@@ -147,7 +147,7 @@ export default {
 	methods: {
 		onClick() {
 			this.active = !this.active;
-			console.log(this.job.file.filename);
+			console.log(this.job.file.fileName);
 			console.log("The button was pressed and the debug mode is %s", this.debug);
 		},
 
@@ -216,7 +216,7 @@ export default {
 				let headers = new Array();
 				for (let i=0; i < axis.length; ++i)
 					headers.push(axis[i].letter);
-				currLog = new Log(this.job.file.filename, Date.now, headers);
+				currLog = new Log(this.job.file.fileName, Date.now, headers);
 			}
 			else
 			{
