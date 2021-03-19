@@ -205,7 +205,7 @@ export default {
 			console.log("Waiting for job starting");
 			while(!this.isJobRunning) await sleep(1000);
 
-			let axis; let headers; let currLog;
+			let axis; let currLog;
 			let oldLog = this.retrieveLogFromLocalStorage();
 			if (oldLog == null) 
 			{
@@ -213,7 +213,7 @@ export default {
 
 				// Make log header depending on axis.
 				axis = this.visibleAxis();
-				headers = new Array();
+				let headers = new Array();
 				for (let i=0; i < axis.length; ++i)
 					headers.push(axis[i].letter);
 				currLog = new Log(this.job.file.filename, Date.now, headers);
