@@ -131,7 +131,6 @@ export default {
 		...mapState('machine/model', ['job', 'move', 'state']),
 		isJobRunning: state => isPrinting(state.state.status),
 		isJobPaused: state => isPaused(state.state.status),
-		currentFile: job => job.file.fileName,
 		loggingState() {
 			return this.active ? "On" : "Off";
 		},
@@ -148,7 +147,7 @@ export default {
 	methods: {
 		onClick() {
 			this.active = !this.active;
-			console.log(this.currentFile);
+			console.log(this.job.file.filename);
 			console.log("The button was pressed and the debug mode is %s", this.debug);
 		},
 
@@ -217,7 +216,7 @@ export default {
 				headers = new Array();
 				for (let i=0; i < axis.length; ++i)
 					headers.push(axis[i].letter);
-				currLog = new Log(this.currentFile, Date.now, headers);
+				currLog = new Log(this.job.file.filename, Date.now, headers);
 			}
 			else
 			{
