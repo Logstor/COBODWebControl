@@ -87,9 +87,9 @@ h1 {
 							<th>Link</th>
 						</tr>
 						<tr v-for="(log, index) in logList" :key="index">
-							<td>{{ log.filename() }}</td>
-							<td>{{ log.date() }}</td>
-							<td><a :href="log.createBlob()" :download="log.date()+'.csv'">Download</a></td>
+							<td>{{ log.filename }}</td>
+							<td>{{ log.date }}</td>
+							<td><a :href="log.createBlob()" :download="log.date+'.csv'">Download</a></td>
 						</tr>
 					</table>
 				</div>
@@ -116,7 +116,7 @@ export default {
 
 			logDelay: 2000,
 
-			logList: new Array(),
+			logList: [new Log("Filename", Date.now(), ["Hek"])],
 		}
 	},
 
