@@ -213,7 +213,7 @@ export default {
 			if (oldLog == null) 
 			{
 				this.printd("Didn't find old log");
-				this.printd("Starting print log with filename {0}".format(this.job.file.fileName));
+				this.printd(`Starting print log with filename ${this.job.file.fileName}`);
 
 				// Make log header depending on axis.
 				axis = this.visibleAxis();
@@ -224,7 +224,7 @@ export default {
 			}
 			else
 			{
-				this.printd("Found old log with filename {0}".format(this.job.file.fileName));
+				this.printd(`Found old log with filename ${this.job.file.fileName}`);
 				axis.visibleAxis();
 				currLog = oldLog;
 			}
