@@ -145,10 +145,13 @@ export default {
 	},
 
 	methods: {
+		printd(text) {
+			if (this.debug) console.log(text);
+		},
+
 		onClick() {
 			this.active = !this.active;
-			console.log(this.job.file.fileName);
-			console.log("The button was pressed and the debug mode is %s", this.debug);
+			this.printd("Button clicked");
 		},
 
 		/**
@@ -162,7 +165,7 @@ export default {
 		 * @param {Log} log The class instance of Log to add.
 		 */
 		addLog(log) {
-			console.log("addLog()");
+			this.printd("addLog()");
 			this.logList.push(log);
 		},
 
@@ -187,7 +190,7 @@ export default {
 			if (log == null)
 			{
 				if (this.debug)
-					console.log("There wasn't any old log in the localstorage");
+					this.printd("There wasn't any old log in the localstorage");
 				return null;
 			}
 
@@ -199,17 +202,17 @@ export default {
 		},
 
 		async log() {
-			console.log("async log()");
+			this.printd("async log()");
 
 			// Wait for print to start
-			console.log("Waiting for job starting");
+			this.printd("Waiting for job starting");
 			while(!this.isJobRunning) await sleep(1000);
 
 			let axis; let currLog;
 			let oldLog = this.retrieveLogFromLocalStorage();
 			if (oldLog == null) 
 			{
-				console.log("Didn't find old log");
+				this.printd("Didn't find old log");
 
 				// Make log header depending on axis.
 				axis = this.visibleAxis();
@@ -220,7 +223,7 @@ export default {
 			}
 			else
 			{
-				console.log("Found old log");
+				this.printd("Found old log");
 				axis.visibleAxis();
 				currLog = oldLog;
 			}
@@ -231,7 +234,7 @@ export default {
 			};
 
 			// Continously add to log
-			console.log("Going into log loop");
+			this.printd("Going into log loop");
 			while (this.active && this.isJobRunning)
 			{
 				// Delay
@@ -250,7 +253,7 @@ export default {
 				}
 				currLog.addEntry(positions);
 			}
-			console.log("Out of log loop");
+			this.printd("Out of log loop");
 
 			// Done with current print, then make log available for download
 			this.addLog(currLog);
@@ -268,7 +271,7 @@ export default {
 	 */
 	mounted: function() {
 		if (this.debug)
-			console.log("Meminisse is mounted!");
+			this.printd("Meminisse is mounted!");
 
 		// Start the asynchronious logging
 		this.log();
