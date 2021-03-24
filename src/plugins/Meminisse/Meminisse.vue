@@ -107,7 +107,7 @@ import { mapState } from 'vuex';
 import { isPrinting, isPaused } from '../../store/machine/modelEnums.js';
 import { Log } from './log';
 import { sleep } from './index.js';
-import BaseConnector from '../../store/machine/connector/RestConnector.js'
+import BaseConnector from '../../store/machine/connector/BaseConnector.js'
 
 export default {
 	data() {
