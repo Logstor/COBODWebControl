@@ -107,6 +107,7 @@ import { mapState } from 'vuex';
 import { isPrinting, isPaused } from '../../store/machine/modelEnums.js';
 import { Log } from './log';
 import { sleep } from './index.js';
+import BaseConnector from '../../store/machine/connector/RestConnector.js'
 
 export default {
 	data() {
@@ -152,6 +153,8 @@ export default {
 		onClick() {
 			this.active = !this.active;
 			this.printd("Button clicked");
+
+			BaseConnector.request("GET", "/machine/COBOD/Log");
 		},
 
 		/**
