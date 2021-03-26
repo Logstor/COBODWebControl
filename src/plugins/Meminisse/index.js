@@ -1,12 +1,14 @@
 'use strict'
 
-import { registerRoute } from '../../routes'
+import { registerRoute, registerCategory } from '../../routes'
 
 import Meminisse from './Meminisse.vue'
 
-// Register a route via Control -> Meminisse
+// Register new category and add to that route
+registerCategory("COBOD", null, "COBOD International A/S", true);
+
 registerRoute(Meminisse, {
-	Control: {
+	COBOD: {
 		Meminisse: {
 			icon: 'mdi-file-tree',
 			caption: 'Meminisse',
