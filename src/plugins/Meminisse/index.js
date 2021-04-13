@@ -1,14 +1,11 @@
 'use strict'
 
-import { registerRoute, registerCategory } from '../../routes'
+import { registerRoute } from '../../routes'
 
 import Meminisse from './Meminisse.vue'
 
-// Register new category and add to that route
-registerCategory("COBOD", null, "COBOD International A/S", true);
-
 registerRoute(Meminisse, {
-	COBOD: {
+	Job: {
 		Meminisse: {
 			icon: 'mdi-file-tree',
 			caption: 'Meminisse',
@@ -16,6 +13,7 @@ registerRoute(Meminisse, {
 		}
 	}
 });
+
 
 /**
  * Used for thread sleeping, and returns a Promise which can be waited for.
