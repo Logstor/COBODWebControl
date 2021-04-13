@@ -14,7 +14,6 @@ registerRoute(Meminisse, {
 	}
 });
 
-
 /**
  * Used for thread sleeping, and returns a Promise which can be waited for.
  */

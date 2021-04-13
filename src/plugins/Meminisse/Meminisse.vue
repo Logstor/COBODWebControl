@@ -70,7 +70,7 @@ h1 {
 				Logging is currently {{this.loggingState}}.
 			</p>
 			<div id="btndiv">
-				<v-btn @click="onClick" :elevation="this.elevation">{{this.active}}</v-btn>
+				<v-btn @click="onClick" :elevation="this.elevation">Try GET Request</v-btn>
 			</div>
 		</div>
 		
@@ -151,10 +151,10 @@ export default {
 		},
 
 		onClick() {
-			this.active = !this.active;
 			this.printd("Button clicked");
 
-			BaseConnector.request("GET", "/machine/COBOD/Log");
+			let prom = BaseConnector.request("GET", "/machine/COBOD/Log");
+			this.printd(prom);
 		},
 
 		/**
