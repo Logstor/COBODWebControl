@@ -36,25 +36,39 @@ h1 {
 	border: 2px solid red;
 }
 
+#downloadheader {
+	display: flex;
+	justify-content: center;
+
+	padding: 5px;
+}
+
 #downloadplate {
 	display: flex;
 	justify-content: center;
 	flex-direction: column;
 
-	box-shadow: 5px 5px 8px darkblue;
+	box-shadow: 8px 8px 8px darkblue;
 	border-radius: 10px;
 
 	background: cornsilk;
 }
 
-#downloadheader {
+#downloadbuttonplate {
 	display: flex;
 	justify-content: center;
-	margin: 10px;
+	flex-direction: column;
+
+	padding: 4px;
+
+	box-shadow: 3px 3px 3px black;;
+	border-radius: 4px;
+
+	background: gray;
 }
 
 #downloadtable, td, th {
-	padding: 5px;
+	padding: 8px;
 }
 
 </style>
@@ -76,20 +90,25 @@ h1 {
 					<h2>Downloadable logs</h2>
 				</div>
 				<div id="downloadlist">
-					<table id="downloadtable">
+					<table v-for="(directory, index) in directories" :key="index" id="downloadtable">
 						<tr>
 							<th>GCode</th>
+							<th>Size</th>
 							<th>Date</th>
 							<th>Link</th>
 						</tr>
-						<tr v-for="(log, index) in logList" :key="index">
-							<td>{{ log.filename }}</td>
-							<td>{{ log.date }}</td>
-							<td><a :href="log.createBlob()" :download="log.date+'.csv'">Download</a></td>
+						<tr v-for="(log, index) in directory.files" :key="index">
+							<td>{{ log.getName() }}</td>
+							<td>{{ log.getSizeKBString() }}</td>
+							<td>{{ log.lastModified }}</td>
+							<td>
+								<div id="downloadbuttonplate" >
+									<button @click="onDownloadClick(log)">Download</button>
+								</div>
+							</td>
 						</tr>
 					</table>
 				</div>
-
 			</div>
 				
 		</div>
@@ -100,14 +119,20 @@ h1 {
 'use strict'
 
 //import { Log } from './log';
-//import { sleep } from './index.js';
-import PollConnector from '../../store/machine/connector/PollConnector.js'
+import { Directory, File } from './index.js';
+import saveAs from 'file-saver'
+import Path from '../../utils/path.js'
+import RestConnector from '../../store/machine/connector/RestConnector.js'
+import { mapActions } from 'vuex'
 
 export default {
 	data() {
 		return {
 			elevation: "2",
 			logList: [],
+			notdownloadable: true,
+			directories: [],
+			dataPath: "0:/Meminisse/data/",
 		}
 	},
 
@@ -123,9 +148,7 @@ export default {
 	},
 
 	asyncComputed: {
-		async fileList() {
-			
-		}
+
 	},
 
 	props: {
@@ -137,6 +160,9 @@ export default {
 	},
 
 	methods: {
+		...mapActions('machine', {
+			machineDownload: 'download'}),
+
 		printd(text) {
 			if (this.debug) console.log(text);
 		},
@@ -145,15 +171,77 @@ export default {
 			this.printd("Button clicked");
 		},
 
-		async getFileList() {
-			this.printd("Trying to connect and get file list")
-			let connection = PollConnector.connect();
-			let folders = await connection.getFileList("0:/Meminisse/data/2021");
-			this.printd("Done getting filelist")
+		onDownloadClick(file) {
 
-			this.printd(folders);
+			if (!(file instanceof File)) 
+			{
+				console.error("onDownloadClick wrong argument!");
+				return;
+			}
+
+			this.printd(`Log filename: ${file.path}`);
+
+			this.machineDownload({ filename: Path.combine(this.dataPath, file.path), type: 'blob' }).then( (blob) => {
+				saveAs(blob, file.getName());
+			});
+		},
+
+		async updateFileList() {
+			const path = this.dataPath;
+
+			// Connect to the machine and get the inital file list
+			const connection = await this.createConnection();
+			const folders = await connection.getFileList(path);
+
+			// Go through every folder, and add logs
+			await folders.forEach( async (item) => {
+				if (item.isDirectory)
+				{
+					// Add to directories
+					let directoryPath = Path.combine(path, item.name);
+					let directory = new Directory(directoryPath, item.lastModified);
+					this.directories.push(directory);
+
+					// 
+					let files = await connection.getFileList(directory.path);
+					files.forEach( file => {
+						if (!file.isDirectory)
+						{
+							let filePath = Path.combine(item.name, file.name);
+							let nfile = new File(filePath, false, file.size, file.lastModified);
+							directory.addFile(nfile);
+						}
+					});
+
+					// Sort the files in the directory
+					directory.files.sort((a, b) => {
+						return b.getName().localeCompare(a.getName());
+					});
+				}
+			});
+
+			// Make sure not to have a hanging socket connection
+			connection.disconnect();
 
 			return folders;
+		},
+
+		async createConnection() {
+			return await RestConnector.connect("192.168.1.45");
+		},
+
+		forceFileDownload(response, file) {
+			if (!(file instanceof File))
+			{
+				console.error("forceFileDownload got wrong file argument!");
+				return;
+			}
+			const url = window.URL.createObjectURL(new Blob([response.data]))
+			const link = document.createElement('a')
+			link.href = url
+			link.setAttribute('download', file.getName()) //or any other extension
+			document.body.appendChild(link)
+			link.click()
 		},
 	},
 
@@ -162,7 +250,7 @@ export default {
 	 */
 	mounted: function() {
 		this.printd("Meminisse is mounted!");
-		this.printd(this.getFileList());
+		this.updateFileList();
 	}
 }
 

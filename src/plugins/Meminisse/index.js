@@ -34,6 +34,8 @@ export class File
 	}
 
 	getName() { return Path.extractFileName(this.path); }
+
+	getSizeKBString() { return `${Math.round(this.size/1000)}kB`; }
 }
 
 export class Directory extends File
