@@ -54,7 +54,7 @@ h1 {
 	background: cornsilk;
 }
 
-#downloadbuttonplate {
+#actionbuttonplate {
 	display: flex;
 	justify-content: center;
 	flex-direction: column;
@@ -95,15 +95,16 @@ h1 {
 							<th>GCode</th>
 							<th>Size</th>
 							<th>Date</th>
-							<th>Link</th>
+							<th>Actions</th>
 						</tr>
 						<tr v-for="(log, index) in directory.files" :key="index">
 							<td>{{ log.getName() }}</td>
 							<td>{{ log.getSizeKBString() }}</td>
 							<td>{{ log.lastModified }}</td>
 							<td>
-								<div id="downloadbuttonplate" >
+								<div id="actionbuttonplate" >
 									<button @click="onDownloadClick(log)">Download</button>
+									<button @click="onDeleteClick(log)">Delete</button>
 								</div>
 							</td>
 						</tr>
@@ -161,7 +162,9 @@ export default {
 
 	methods: {
 		...mapActions('machine', {
-			machineDownload: 'download'}),
+			machineDownload: 'download',
+			machineDelete: 'delete',
+			getFileList: 'getFileList'}),
 
 		printd(text) {
 			if (this.debug) console.log(text);
@@ -179,19 +182,26 @@ export default {
 				return;
 			}
 
-			this.printd(`Log filename: ${file.path}`);
-
 			this.machineDownload({ filename: Path.combine(this.dataPath, file.path), type: 'blob' }).then( (blob) => {
 				saveAs(blob, file.getName());
 			});
+		},
+
+		onDeleteClick(file) {
+			if (!(file instanceof File)) 
+			{
+				console.error("onDeleteClick wrong argument!");
+				return;
+			}
+
+			this.machineDelete(Path.combine(this.dataPath, file.path));
 		},
 
 		async updateFileList() {
 			const path = this.dataPath;
 
 			// Connect to the machine and get the inital file list
-			const connection = await this.createConnection();
-			const folders = await connection.getFileList(path);
+			const folders = await this.getFileList(path);
 
 			// Go through every folder, and add logs
 			await folders.forEach( async (item) => {
@@ -203,7 +213,7 @@ export default {
 					this.directories.push(directory);
 
 					// 
-					let files = await connection.getFileList(directory.path);
+					let files = await this.getFileList(directory.path);
 					files.forEach( file => {
 						if (!file.isDirectory)
 						{
@@ -219,9 +229,6 @@ export default {
 					});
 				}
 			});
-
-			// Make sure not to have a hanging socket connection
-			connection.disconnect();
 
 			return folders;
 		},
