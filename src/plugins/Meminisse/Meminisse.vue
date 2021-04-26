@@ -123,7 +123,6 @@ h1 {
 import { Directory, File } from './index.js';
 import saveAs from 'file-saver'
 import Path from '../../utils/path.js'
-import RestConnector from '../../store/machine/connector/RestConnector.js'
 import { mapActions } from 'vuex'
 
 export default {
@@ -133,7 +132,7 @@ export default {
 			logList: [],
 			notdownloadable: true,
 			directories: [],
-			dataPath: "0:/Meminisse/data/",
+			dataPath: "0:/sys/COBOD/Meminisse/data",
 		}
 	},
 
@@ -231,10 +230,6 @@ export default {
 			});
 
 			return folders;
-		},
-
-		async createConnection() {
-			return await RestConnector.connect("192.168.1.45");
 		},
 
 		forceFileDownload(response, file) {
