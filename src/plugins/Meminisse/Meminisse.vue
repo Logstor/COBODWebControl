@@ -63,8 +63,6 @@ h1 {
 
 	box-shadow: 3px 3px 3px black;;
 	border-radius: 4px;
-
-	background: gray;
 }
 
 #downloadtable, td, th {
@@ -102,16 +100,13 @@ h1 {
 							<td>{{ log.getSizeKBString() }}</td>
 							<td>{{ log.lastModified }}</td>
 							<td>
-								<div id="actionbuttonplate" >
-									<button @click="onDownloadClick(log)">Download</button>
-									<button @click="onDeleteClick(log)">Delete</button>
-								</div>
+								<v-btn @click="onDownloadClick(log)" color="primary">Download</v-btn>
+								<v-btn @click="onDeleteClick(log)" color="warning">Delete</v-btn>
 							</td>
 						</tr>
 					</table>
 				</div>
 			</div>
-				
 		</div>
 	</div>
 </template>
