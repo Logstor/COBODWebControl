@@ -8,32 +8,24 @@ h1 {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-
-	border: 2px solid green;
 }
 
 #maindiv {
 	display: table;
 	align-items: center;
 	text-align: center;
-
-	border: 2px solid yellow;
 }
 
 #btndiv {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-
-	border: 2px solid red;
 }
 
 #bottomdiv {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
-
-	border: 2px solid red;
 }
 
 #downloadheader {
