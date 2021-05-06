@@ -181,10 +181,15 @@ export default {
 			}
 
 			this.machineDelete(Path.combine(this.dataPath, file.path));
+
+			this.updateFileList();
 		},
 
 		async updateFileList() {
 			const path = this.dataPath;
+
+			// Clear current directories
+			this.clearDirectories();
 
 			// Connect to the machine and get the inital file list
 			const folders = await this.getFileList(path);
@@ -231,6 +236,13 @@ export default {
 			link.setAttribute('download', file.getName()) //or any other extension
 			document.body.appendChild(link)
 			link.click()
+		},
+
+		/**
+		 * This is clearing the directories by setting the length to 0.
+		 */
+		clearDirectories() {
+			this.directories.length = 0;
 		},
 	},
 
