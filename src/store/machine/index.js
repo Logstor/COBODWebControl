@@ -48,7 +48,12 @@ export default function(connector, pluginCacheFields, pluginSettingFields) {
 			]),
 
 			// Reconnect after a connection error
-			async reconnect({ commit, dispatch }) {
+			async reconnect({ state, commit, dispatch }) {
+				if (!state.isReconnecting) {
+					// Clear the global variables again
+					dispatch('update', { global: null });
+				}
+
 				commit('setReconnecting', true);
 				try {
 					await connector.reconnect();
@@ -182,9 +187,10 @@ export default function(connector, pluginCacheFields, pluginSettingFields) {
 								filename,
 								content,
 								cancellationToken,
-								onProgress: (loaded, total) => {
+								onProgress: (loaded, total, retry) => {
 									item.progress = loaded / total;
 									item.speed = loaded / (((new Date()) - item.startTime) / 1000);
+									item.retry = retry;
 									if (notification) {
 										notification.onProgress(loaded, total, item.speed);
 									}
@@ -354,10 +360,11 @@ export default function(connector, pluginCacheFields, pluginSettingFields) {
 								filename,
 								type,
 								cancellationToken,
-								onProgress: (loaded, total) => {
+								onProgress: (loaded, total, retry) => {
 									item.size = total;
 									item.progress = loaded / total;
 									item.speed = loaded / (((new Date()) - item.startTime) / 1000);
+									item.retry = retry;
 									if (notification) {
 										notification.onProgress(loaded, total, item.speed);
 									}

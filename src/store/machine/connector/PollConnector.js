@@ -79,7 +79,7 @@ export default class PollConnector extends BaseConnector {
 		if (onProgress) {
 			xhr.onprogress = function(e) {
 				if (e.loaded && e.total) {
-					onProgress(e.loaded, e.total);
+					onProgress(e.loaded, e.total, retry);
 				}
 			}
 			xhr.upload.onprogress = xhr.onprogress;
@@ -820,23 +820,37 @@ export default class PollConnector extends BaseConnector {
 				let keyIndex = 1;
 				for (let i = 0; i < keysToQuery.length; i++) {
 					const key = keysToQuery[i];
-					const keyResponse = await this.request('GET', 'rr_model', { key, flags: 'd99vn' });
-					await this.dispatch('update', { [key]: keyResponse.result });
+					let keyResult = null, next = 0;
+					do {
+						const keyResponse = await this.request('GET', 'rr_model', {
+							key,
+							flags: (next === 0) ? 'd99vn' : `d99vna${next}`
+						});
+
+						next = keyResponse.next ? keyResponse.next : 0;
+						if (keyResult === null || !(keyResult instanceof Array)) {
+							keyResult = keyResponse.result;
+						} else {
+							keyResult = keyResult.concat(keyResponse.result);
+						}
+					} while (next !== 0);
+
+					await this.dispatch('update', { [key]: keyResult });
 					BaseConnector.setConnectingProgress((keyIndex++ / keysToQuery.length) * 100);
 
 					if (key === 'job') {
-						jobKey = keyResponse.result;
+						jobKey = keyResult;
 					} else if (key === 'directories') {
-						this.webDirectory = keyResponse.result.web;
+						this.webDirectory = keyResult.web;
 					} else if (key === 'move') {
-						axes = keyResponse.result.axes;
-						extruders = keyResponse.result.extruders;
+						axes = keyResult.axes;
+						extruders = keyResult.extruders;
 						this.updateZAxisIndex(axes);
 					} else if (key === 'sensors') {
-						analogSensors = keyResponse.result.analog;
+						analogSensors = keyResult.analog;
 					} else if (key === 'state') {
-						status = keyResponse.result.status;
-						this.lastUptime = keyResponse.result.upTime;
+						status = keyResult.status;
+						this.lastUptime = keyResult.upTime;
 					}
 				}
 			} finally {
@@ -862,18 +876,34 @@ export default class PollConnector extends BaseConnector {
 			// Check if any of the non-live fields have changed and query them if so
 			for (let key in DefaultMachineModel) {
 				if (this.lastSeqs[key] !== seqs[key]) {
-					const keyResponse = await this.request('GET', 'rr_model', { key, flags: 'd99vn' });
-					await this.dispatch('update', { [key]: keyResponse.result });
+					let keyResult = null, next = 0;
+					do {
+						const keyResponse = await this.request('GET', 'rr_model', {
+							key,
+							flags: (next === 0) ? 'd99vn' : `d99vna${next}`
+						});
+
+						next = keyResponse.next ? keyResponse.next : 0;
+						if (keyResult === null || !(keyResult instanceof Array)) {
+							keyResult = keyResponse.result;
+						} else {
+							keyResult = keyResult.concat(keyResponse.result);
+						}
+					} while (next !== 0);
+
+					await this.dispatch('update', { [key]: keyResult });
 
 					if (key === 'directories') {
-						this.webDirectory = keyResponse.result.web;
+						this.webDirectory = keyResult.web;
 					} else if (key === 'job') {
-						jobKey = keyResponse.result;
+						jobKey = keyResult;
 					} else if (key === 'move') {
-						this.updateZAxisIndex(keyResponse.result.axes);
+						this.updateZAxisIndex(keyResult.axes);
 					}
 				}
 			}
+
+			// TODO add support for seqs.volChanges[]
 
 			// Check if the firmware has rebooted
 			if (response.result.state.upTime < this.lastUptime) {
@@ -1120,11 +1150,20 @@ export default class PollConnector extends BaseConnector {
 			params.crc32 = checksum.toString(16);
 		}
 
-		// Perform actual upload in the background
-		const response = await this.request('POST', 'rr_upload', params, 'json', payload, onProgress, 0, cancellationToken, filename);
-		if (response.err !== 0) {
-			throw new OperationFailedError(`err ${response.err}`);
+		// Perform actual upload in the background. It might fail due to CRC errors, so keep retrying
+		let response;
+		for (let retry = 0; retry < this.settings.ajaxRetries; retry++) {
+			response = await this.request('POST', 'rr_upload', params, 'json', payload, onProgress, 0, cancellationToken, filename, retry);
+			if (response.err === 0) {
+				// Upload successful
+				return;
+			}
+			if (payload.length || payload.size > this.settings.fileTransferRetryThreshold) {
+				// Don't retry if the payload is too big
+				break;
+			}
 		}
+		throw new OperationFailedError(response ? `err ${response.err}` : undefined);
 	}
 
 	async delete(filename) {
