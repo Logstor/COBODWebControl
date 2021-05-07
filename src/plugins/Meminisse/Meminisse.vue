@@ -61,6 +61,14 @@ h1 {
 	padding: 8px;
 }
 
+#refreshbutton {
+	display: flex;
+	justify-content: right;
+
+	padding-left: 12px;
+	padding-right: 4px;
+}
+
 </style>
 
 <template>
@@ -78,6 +86,9 @@ h1 {
 			<div id="downloadplate">
 				<div id="downloadheader">
 					<h2>Downloadable logs</h2>
+				</div>
+				<div id="refreshbutton">
+					<v-btn @click="updateFileList()" color="primary">Refresh</v-btn>
 				</div>
 				<div id="downloadlist">
 					<table v-for="(directory, index) in directories" :key="index" id="downloadtable">
@@ -180,9 +191,7 @@ export default {
 				return;
 			}
 
-			this.machineDelete(Path.combine(this.dataPath, file.path));
-
-			this.updateFileList();
+			this.machineDelete(Path.combine(this.dataPath, file.path)).then(this.updateFileList());
 		},
 
 		async updateFileList() {
