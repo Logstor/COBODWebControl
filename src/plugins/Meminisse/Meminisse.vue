@@ -77,9 +77,6 @@ h1 {
 			<h1>
 				Meminisse
 			</h1>
-			<p>
-				This plugin will log all the movement of the machine to grasp the wear of the components.<br>
-			</p>
 		</div>
 		
 		<div id="bottomdiv">
@@ -90,7 +87,7 @@ h1 {
 				<div id="refreshbutton">
 					<v-btn @click="updateFileList()" color="primary">Refresh</v-btn>
 				</div>
-				<div id="downloadlist">
+				<div v-if="directories.length !== 0 && directories[0].files.length !== 0" id="downloadlist">
 					<table v-for="(directory, index) in directories" :key="index" id="downloadtable">
 						<tr>
 							<th>GCode</th>
@@ -109,6 +106,22 @@ h1 {
 						</tr>
 					</table>
 				</div>
+				<div v-else id="downloadlist">
+					<table v-for="(directory, index) in directories" :key="index" id="downloadtable">
+						<tr>
+							<th>GCode</th>
+							<th>Size</th>
+							<th>Date</th>
+							<th>Actions</th>
+						</tr>
+						<tr>
+							<td>--- Empty ---</td>
+							<td>--- Empty ---</td>
+							<td>--- Empty ---</td>
+							<td>--- Empty ---</td>
+						</tr>
+					</table>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -121,7 +134,8 @@ h1 {
 import { Directory, File } from './index.js';
 import saveAs from 'file-saver'
 import Path from '../../utils/path.js'
-import { mapActions } from 'vuex'
+import { mapActions, mapState } from 'vuex'
+import { log } from '../../utils/logging.js'
 
 export default {
 	data() {
@@ -142,7 +156,8 @@ export default {
 	},
 	
 	computed: {
-		
+		...mapState('settings', ['darkTheme']),
+		...mapState('machine/model', ['state']),
 	},
 
 	asyncComputed: {
@@ -172,7 +187,6 @@ export default {
 		},
 
 		onDownloadClick(file) {
-
 			if (!(file instanceof File)) 
 			{
 				console.error("onDownloadClick wrong argument!");
@@ -191,7 +205,11 @@ export default {
 				return;
 			}
 
-			this.machineDelete(Path.combine(this.dataPath, file.path)).then(this.updateFileList());
+			// Only make it possible to delete logfiles if we aren't currently logging.
+			if (this.state.status == 'idle')
+				this.machineDelete(Path.combine(this.dataPath, file.path)).then(this.updateFileList());
+			else
+				log('error', "Delete Error", `Couldn't delete file: ${file.getName()}! Machine needs to be in idle!`);
 		},
 
 		async updateFileList() {
