@@ -72,6 +72,7 @@ h1 {
 </style>
 
 <template>
+
 	<div id="rootdiv">
 		<div id="maindiv">
 			<h1>
@@ -124,6 +125,7 @@ h1 {
 				</div>
 			</div>
 		</div>
+
 	</div>
 </template>
 
@@ -145,6 +147,12 @@ export default {
 			notdownloadable: true,
 			directories: [],
 			dataPath: "0:/sys/COBOD/Meminisse/data",
+			confirmDeleteDialog: {
+				show: false,
+				title: "",
+				prompt: "",
+				path: "",
+			},
 		}
 	},
 
@@ -207,9 +215,21 @@ export default {
 
 			// Only make it possible to delete logfiles if we aren't currently logging.
 			if (this.state.status == 'idle')
-				this.machineDelete(Path.combine(this.dataPath, file.path)).then(this.updateFileList());
+			{
+				// Show confirmation dialog before delete
+				confirm(`Delete ${file.getName()}?`) ? this.onConfirmDelete(Path.combine(this.dataPath, file.path)) : this.onDismissDelete();
+			}
 			else
 				log('error', "Delete Error", `Couldn't delete file: ${file.getName()}! Machine needs to be in idle!`);
+		},
+
+		onConfirmDelete(path) {
+			this.printd("Confirmed Delete");
+			this.machineDelete(path).then(this.updateFileList());
+		},
+
+		onDismissDelete() {
+			this.printd("Cancelled Delete");
 		},
 
 		async updateFileList() {
