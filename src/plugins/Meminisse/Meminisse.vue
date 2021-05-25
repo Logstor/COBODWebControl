@@ -194,12 +194,12 @@ export default {
 			machineDelete: 'delete',
 			getFileList: 'getFileList'}),
 
+		/**
+		 * Prints the message to the console only if the property 
+		 * "debug" is true.
+		 */
 		printd(text) {
 			if (this.debug) console.log(text);
-		},
-
-		onClick() {
-			this.printd("Button clicked");
 		},
 
 		onDownloadClick(file) {
@@ -231,15 +231,27 @@ export default {
 				log('error', "Delete Error", `Couldn't delete file: ${file.getName()}! Machine needs to be in idle!`);
 		},
 
+		/**
+		 * Callback for when the user confirms the deletion of a file.
+		 */
 		onConfirmDelete(path) {
 			this.printd("Confirmed Delete");
 			this.machineDelete(path).then(this.updateFileList());
 		},
 
+		/**
+		 * Callback for when the user doesn't want to delete the file anyway.
+		 */
 		onDismissDelete() {
 			this.printd("Cancelled Delete");
 		},
 
+		/**
+		 * Updates the table of log files.
+		 * 
+		 * It makes an HTTP request to the DSF, and gets an respond with all folders and 
+		 * files in the given path.
+		 */
 		async updateFileList() {
 			const path = this.dataPath;
 
