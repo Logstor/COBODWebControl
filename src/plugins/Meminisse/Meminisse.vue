@@ -43,7 +43,7 @@ h1 {
 	box-shadow: 8px 8px 8px darkblue;
 	border-radius: 10px;
 
-	background: cornsilk;
+	/*background: gray;*/
 }
 
 #actionbuttonplate {
@@ -81,14 +81,14 @@ h1 {
 		</div>
 		
 		<div id="bottomdiv">
-			<div id="downloadplate">
+			<div id="downloadplate" :style="downloadPlateColor">
 				<div id="downloadheader">
 					<h2>Downloadable logs</h2>
 				</div>
 				<div id="refreshbutton">
-					<v-btn @click="updateFileList()" color="primary">Refresh</v-btn>
+					<v-btn @click="updateFileList()" :color="currTheme">Refresh</v-btn>
 				</div>
-				<div v-if="directories.length !== 0 && directories[0].files.length !== 0" id="downloadlist">
+				<div v-if="directories.length !== 0 && directories[0].files.length !== 0">
 					<table v-for="(directory, index) in directories" :key="index" id="downloadtable">
 						<tr>
 							<th>GCode</th>
@@ -101,7 +101,7 @@ h1 {
 							<td>{{ log.getSizeKBString() }}</td>
 							<td>{{ log.lastModified }}</td>
 							<td>
-								<v-btn @click="onDownloadClick(log)" color="primary">Download</v-btn>
+								<v-btn @click="onDownloadClick(log)" :color="currTheme">Download</v-btn>
 								<v-btn @click="onDeleteClick(log)" color="warning">Delete</v-btn>
 							</td>
 						</tr>
@@ -166,6 +166,14 @@ export default {
 	computed: {
 		...mapState('settings', ['darkTheme']),
 		...mapState('machine/model', ['state']),
+
+		currTheme() {
+			return this.darkTheme ? 'dark' : 'primary'; 
+		},
+
+		downloadPlateColor() {
+			return this.darkTheme ? 'background: grey' : 'background: cornsilk';
+		},
 	},
 
 	asyncComputed: {
