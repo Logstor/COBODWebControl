@@ -63,10 +63,20 @@ h1 {
 
 #refreshbutton {
 	display: flex;
-	justify-content: right;
+	justify-self: flex-start;
+	align-self: flex-start;
 
 	padding-left: 12px;
-	padding-right: 4px;
+	padding-right: 12px;
+}
+
+#downloadAllButton {
+	display: flex;
+	justify-self: flex-start;
+	align-self:flex-end;
+
+	padding-left: 12px;
+	padding-right: 12px;
 }
 
 </style>
@@ -87,6 +97,9 @@ h1 {
 				</div>
 				<div id="refreshbutton">
 					<v-btn @click="updateFileList()" :color="currTheme">Refresh</v-btn>
+				</div>
+				<div id="downloadAllButton">
+					<v-btn @click="onDownloadAll()" :color="currTheme">Download All</v-btn>
 				</div>
 				<div v-if="directories.length !== 0 && directories[0].files.length !== 0">
 					<table v-for="(directory, index) in directories" :key="index" id="downloadtable">
@@ -166,6 +179,9 @@ export default {
 	computed: {
 		...mapState('settings', ['darkTheme']),
 		...mapState('machine/model', ['state']),
+		...mapState('machine/model', {
+			machineStatus: state => state.state.status
+		}),
 
 		currTheme() {
 			return this.darkTheme ? 'dark' : 'primary'; 
@@ -199,7 +215,7 @@ export default {
 		 * "debug" is true.
 		 */
 		printd(text) {
-			if (this.debug) console.log(text);
+			if (this.debug) console.log(`[Meminisse]: ${text}`);
 		},
 
 		onDownloadClick(file) {
@@ -209,9 +225,12 @@ export default {
 				return;
 			}
 
-			this.machineDownload({ filename: Path.combine(this.dataPath, file.path), type: 'blob' }).then( (blob) => {
-				saveAs(blob, file.getName());
-			});
+			this.fileDownload(file);
+		},
+
+		onDownloadAll() {
+			this.printd("onDownloadAll");
+			this.directories.forEach((directory) => { this.recursiveFileDownload(directory); });
 		},
 
 		onDeleteClick(file) {
@@ -291,18 +310,36 @@ export default {
 			return folders;
 		},
 
-		forceFileDownload(response, file) {
-			if (!(file instanceof File))
+		/**
+		 * Downloads file from the Duet and Saves it. 
+		 * 
+		 * @param {File} file The file to download. Most be of type File.
+		 */
+		fileDownload(file) {
+			this.machineDownload({ filename: Path.combine(this.dataPath, file.path), type: 'blob' }).then((blob) => {
+				saveAs(blob, file.getName());
+			});
+		},
+
+		/**
+		 * Initiates a recursive download of all files within the directory and all its subdirectories.
+		 * 
+		 * @param {Directory} directory Downloads all the files contained in this and all subdirectories to this.
+		 */
+		recursiveFileDownload(directory) {
+			// Defensive
+			if (directory == null) return;
+			if ( !(directory instanceof Directory || directory instanceof File) ) return;
+
+			// If directory go recursive
+			if (directory.isDirectory)
 			{
-				console.error("forceFileDownload got wrong file argument!");
-				return;
+				directory.subDirectories.forEach((subDir) => { this.recursiveFileDownload(subDir); });
+				directory.files.forEach((file) => { this.fileDownload(file); });
 			}
-			const url = window.URL.createObjectURL(new Blob([response.data]))
-			const link = document.createElement('a')
-			link.href = url
-			link.setAttribute('download', file.getName()) //or any other extension
-			document.body.appendChild(link)
-			link.click()
+			// Otherwise just download the file and terminate recursion
+			else
+				this.fileDownload(directory);
 		},
 
 		/**
@@ -310,6 +347,13 @@ export default {
 		 */
 		clearDirectories() {
 			this.directories.length = 0;
+		},
+	},
+
+	watch: {
+		machineStatus(newVal) {
+			this.printd(`Machine status change: ${newVal}`);
+			this.updateFileList();
 		},
 	},
 
@@ -323,3 +367,5 @@ export default {
 }
 
 </script>
+
+  
