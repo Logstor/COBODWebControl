@@ -156,7 +156,6 @@ export default {
 	data() {
 		return {
 			elevation: "2",
-			logList: [],
 			notdownloadable: true,
 			directories: [],
 			dataPath: "0:/sys/COBOD/Meminisse/data",
